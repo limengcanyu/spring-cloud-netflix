@@ -1,11 +1,11 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,18 +33,22 @@ import org.mockito.Mockito;
 
 import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.health.DiscoveryClientHealthIndicator;
 import org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.cloud.context.scope.GenericScope;
+import org.springframework.cloud.netflix.eureka.config.DiscoveryClientOptionalArgsConfiguration;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -63,6 +67,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.fail;
  * @author Spencer Gibb
  * @author Matt Jenkins
  * @author Olga Maciaszek-Sharma
+ * @author Tim Ysewyn
  */
 public class EurekaClientAutoConfigurationTests {
 
@@ -78,6 +83,7 @@ public class EurekaClientAutoConfigurationTests {
 	private void setupContext(Class<?>... config) {
 		ConfigurationPropertySources.attach(this.context.getEnvironment());
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
+				DiscoveryClientOptionalArgsConfiguration.class,
 				EurekaDiscoveryClientConfiguration.class);
 		for (Class<?> value : config) {
 			this.context.register(value);
@@ -320,6 +326,20 @@ public class EurekaClientAutoConfigurationTests {
 	}
 
 	@Test
+	public void healthCheckUrlPathWithServerPortAndContextPathKebobCase() {
+		TestPropertyValues.of("server.port=8989",
+				"server.servlet.context-path=/servletContextPath",
+				"eureka.instance.health-check-url-path=${server.servlet.context-path:}/myHealthCheck")
+				.applyTo(this.context);
+		setupContext(RefreshAutoConfiguration.class);
+		EurekaInstanceConfigBean instance = this.context
+				.getBean(EurekaInstanceConfigBean.class);
+		assertThat(instance.getHealthCheckUrl())
+				.as("Wrong health check: " + instance.getHealthCheckUrl())
+				.endsWith(":8989/servletContextPath/myHealthCheck");
+	}
+
+	@Test
 	public void statusPageUrlPathAndManagementPortKabobCase() {
 		TestPropertyValues
 				.of("server.port=8989", "management.server.port=9999",
@@ -441,8 +461,7 @@ public class EurekaClientAutoConfigurationTests {
 		assertThat(healthCheckHandler).isInstanceOf(EurekaHealthCheckHandler.class);
 		assertThat(oldEurekaClient.getHealthCheckHandler()).isSameAs(healthCheckHandler);
 
-		ContextRefresher refresher = this.context.getBean("contextRefresher",
-				ContextRefresher.class);
+		ContextRefresher refresher = this.context.getBean(ContextRefresher.class);
 		refresher.refresh();
 
 		EurekaClient newEurekaClient = getLazyInitEurekaClient();
@@ -474,7 +493,7 @@ public class EurekaClientAutoConfigurationTests {
 	@Test
 	public void basicAuth() {
 		TestPropertyValues.of("server.port=8989",
-				"eureka.client.serviceUrl.defaultZone=http://user:foo@example.com:80/eureka")
+				"eureka.client.serviceUrl.defaultZone=https://user:foo@example.com:80/eureka")
 				.applyTo(this.context);
 		setupContext(MockClientConfiguration.class);
 		// ApacheHttpClient4 http = this.context.getBean(ApacheHttpClient4.class);
@@ -583,6 +602,21 @@ public class EurekaClientAutoConfigurationTests {
 		assertBeanNotPresent(EurekaDiscoveryClientConfiguration.Marker.class);
 	}
 
+	@Test
+	public void shouldNotHaveDiscoveryClientWhenBlockingDiscoveryDisabled() {
+		new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(UtilAutoConfiguration.class,
+						DiscoveryClientOptionalArgsConfiguration.class,
+						EurekaClientAutoConfiguration.class,
+						EurekaDiscoveryClientConfiguration.class))
+				.withPropertyValues("spring.cloud.discovery.blocking.enabled=false")
+				.run(context -> {
+					assertThat(context).doesNotHaveBean(DiscoveryClient.class);
+					assertThat(context)
+							.doesNotHaveBean(DiscoveryClientHealthIndicator.class);
+				});
+	}
+
 	private void assertBeanNotPresent(Class beanClass) {
 		try {
 			context.getBean(beanClass);
@@ -622,7 +656,7 @@ public class EurekaClientAutoConfigurationTests {
 				EurekaClient.class)).getTargetSource().getTarget();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	@Import({ UtilAutoConfiguration.class, EurekaClientAutoConfiguration.class })
 	protected static class TestConfiguration {
@@ -638,7 +672,8 @@ public class EurekaClientAutoConfigurationTests {
 		}
 
 		@Bean(destroyMethod = "shutdown")
-		@ConditionalOnMissingBean(value = EurekaClient.class, search = SearchStrategy.CURRENT)
+		@ConditionalOnMissingBean(value = EurekaClient.class,
+				search = SearchStrategy.CURRENT)
 		public EurekaClient eurekaClient(ApplicationInfoManager manager,
 				EurekaClientConfig config, ApplicationContext context) {
 			return new CloudEurekaClient(manager, config, null, context) {
@@ -655,15 +690,8 @@ public class EurekaClientAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MockClientConfiguration {
-
-		@Bean
-		public MutableDiscoveryClientOptionalArgs mutableDiscoveryClientOptionalArgs() {
-			MutableDiscoveryClientOptionalArgs args = new MutableDiscoveryClientOptionalArgs();
-			args.setEurekaJerseyClient(jerseyClient());
-			return args;
-		}
 
 		@Bean
 		public EurekaJerseyClient jerseyClient() {
@@ -679,7 +707,7 @@ public class EurekaClientAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(AutoServiceRegistrationProperties.class)
 	public static class AutoServiceRegistrationConfiguration {
 

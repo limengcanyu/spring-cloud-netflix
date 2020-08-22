@@ -1,11 +1,11 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,6 @@ import com.netflix.appinfo.AmazonInfo;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.DataCenterInfo;
 import com.netflix.appinfo.InstanceInfo;
-import com.netflix.config.ConfigurationManager;
 import com.netflix.discovery.shared.Application;
 import com.netflix.discovery.shared.Pair;
 import com.netflix.eureka.EurekaServerContext;
@@ -119,10 +117,8 @@ public class EurekaController {
 	private void populateHeader(Map<String, Object> model) {
 		model.put("currentTime", StatusResource.getCurrentTimeAsString());
 		model.put("upTime", StatusInfo.getUpTime());
-		model.put("environment",
-				ConfigurationManager.getDeploymentContext().getDeploymentEnvironment());
-		model.put("datacenter",
-				ConfigurationManager.getDeploymentContext().getDeploymentDatacenter());
+		model.put("environment", "N/A"); // FIXME:
+		model.put("datacenter", "N/A"); // FIXME:
 		PeerAwareInstanceRegistry registry = getRegistry();
 		model.put("registry", registry);
 		model.put("isBelowRenewThresold", registry.isBelowRenewThresold() == 1);
@@ -197,21 +193,16 @@ public class EurekaController {
 				else {
 					zoneCounts.put(zone, 1);
 				}
-				List<Pair<String, String>> list = instancesByStatus.get(status);
-				if (list == null) {
-					list = new ArrayList<>();
-					instancesByStatus.put(status, list);
-				}
+				List<Pair<String, String>> list = instancesByStatus
+						.computeIfAbsent(status, k -> new ArrayList<>());
 				list.add(new Pair<>(id, url));
 			}
 			appData.put("amiCounts", amiCounts.entrySet());
 			appData.put("zoneCounts", zoneCounts.entrySet());
 			ArrayList<Map<String, Object>> instanceInfos = new ArrayList<>();
 			appData.put("instanceInfos", instanceInfos);
-			for (Iterator<Map.Entry<InstanceInfo.InstanceStatus, List<Pair<String, String>>>> iter = instancesByStatus
-					.entrySet().iterator(); iter.hasNext();) {
-				Map.Entry<InstanceInfo.InstanceStatus, List<Pair<String, String>>> entry = iter
-						.next();
+			for (Map.Entry<InstanceInfo.InstanceStatus, List<Pair<String, String>>> entry : instancesByStatus
+					.entrySet()) {
 				List<Pair<String, String>> value = entry.getValue();
 				InstanceInfo.InstanceStatus status = entry.getKey();
 				LinkedHashMap<String, Object> instanceData = new LinkedHashMap<>();
@@ -296,8 +287,8 @@ public class EurekaController {
 		StringBuilder filteredUrls = new StringBuilder();
 		for (String u : urls) {
 			if (u.contains("@")) {
-				filteredUrls.append(u.substring(0, u.indexOf("//") + 2))
-						.append(u.substring(u.indexOf("@") + 1, u.length())).append(",");
+				filteredUrls.append(u, 0, u.indexOf("//") + 2)
+						.append(u.substring(u.indexOf("@") + 1)).append(",");
 			}
 			else {
 				filteredUrls.append(u).append(",");

@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ import com.netflix.discovery.shared.transport.EurekaHttpClient;
 import com.netflix.discovery.shared.transport.TransportClientFactory;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.client.support.BasicAuthorizationInterceptor;
+import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
@@ -66,7 +66,7 @@ public class RestTemplateTransportClientFactory implements TransportClientFactor
 			if (serviceURI.getUserInfo() != null) {
 				String[] credentials = serviceURI.getUserInfo().split(":");
 				if (credentials.length == 2) {
-					restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor(
+					restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(
 							credentials[0], credentials[1]));
 				}
 			}
@@ -76,7 +76,7 @@ public class RestTemplateTransportClientFactory implements TransportClientFactor
 		}
 
 		restTemplate.getMessageConverters().add(0, mappingJacksonHttpMessageConverter());
-		restTemplate.setErrorHandler(new ErrorHanlder());
+		restTemplate.setErrorHandler(new ErrorHandler());
 
 		return restTemplate;
 	}
@@ -150,7 +150,7 @@ public class RestTemplateTransportClientFactory implements TransportClientFactor
 	public void shutdown() {
 	}
 
-	class ErrorHanlder extends DefaultResponseErrorHandler {
+	class ErrorHandler extends DefaultResponseErrorHandler {
 
 		@Override
 		protected boolean hasError(HttpStatus statusCode) {
