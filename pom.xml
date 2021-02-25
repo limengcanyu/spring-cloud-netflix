@@ -3,14 +3,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>spring-cloud-netflix</artifactId>
-	<version>3.0.0-SNAPSHOT</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Netflix</name>
 	<description>Spring Cloud Netflix</description>
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.0.2-SNAPSHOT</version>
 		<relativePath />
 	</parent>
 	<scm>
@@ -21,16 +21,15 @@
 	</scm>
 	<properties>
 		<bintray.package>netflix</bintray.package>
-		<spring-cloud-commons.version>3.0.0-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-config.version>3.0.0-SNAPSHOT</spring-cloud-config.version>
+		<spring-cloud-commons.version>3.0.2-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-config.version>3.0.3-SNAPSHOT</spring-cloud-config.version>
 
 		<!-- Sonar -->
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
 		<sonar.language>java</sonar.language>
-		<eureka-jersey.version>1.19.1</eureka-jersey.version>
-		<xstream.version>1.4.11.1</xstream.version>
+		<eureka-jersey.version>1.19.4</eureka-jersey.version>
 	</properties>
 	<build>
 		<plugins>
@@ -134,11 +133,6 @@
 				<artifactId>jersey-apache-client4</artifactId>
 				<version>${eureka-jersey.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>com.thoughtworks.xstream</groupId>
-				<artifactId>xstream</artifactId>
-				<version>${xstream.version}</version>
-			</dependency>
 			<!-- end eureka deps -->
 		</dependencies>
 	</dependencyManagement>
@@ -156,6 +150,7 @@
 		<module>spring-cloud-netflix-eureka-server</module>
 		<module>spring-cloud-starter-netflix-eureka-client</module>
 		<module>spring-cloud-starter-netflix-eureka-server</module>
+		<module>spring-cloud-netflix-eureka-client-tls-tests</module>
 		<module>docs</module>
     </modules>
 	<profiles>

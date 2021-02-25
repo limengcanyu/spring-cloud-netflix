@@ -18,7 +18,6 @@ package org.springframework.cloud.netflix.eureka.server;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 
 import static org.springframework.cloud.netflix.eureka.server.InstanceRegistryProperties.PREFIX;
 
@@ -55,21 +54,8 @@ public class InstanceRegistryProperties {
 		return expectedNumberOfClientsSendingRenews;
 	}
 
-	public void setExpectedNumberOfClientsSendingRenews(
-			int expectedNumberOfClientsSendingRenews) {
+	public void setExpectedNumberOfClientsSendingRenews(int expectedNumberOfClientsSendingRenews) {
 		this.expectedNumberOfClientsSendingRenews = expectedNumberOfClientsSendingRenews;
-	}
-
-	@DeprecatedConfigurationProperty(
-			replacement = PREFIX + ".expected-number-of-clients-sending-renews")
-	@Deprecated
-	public int getExpectedNumberOfRenewsPerMin() {
-		return getExpectedNumberOfClientsSendingRenews();
-	}
-
-	@Deprecated
-	public void setExpectedNumberOfRenewsPerMin(int expectedNumberOfRenewsPerMin) {
-		setExpectedNumberOfClientsSendingRenews(expectedNumberOfRenewsPerMin);
 	}
 
 	public int getDefaultOpenForTrafficCount() {

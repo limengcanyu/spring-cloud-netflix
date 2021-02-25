@@ -21,11 +21,23 @@ import com.netflix.discovery.AbstractDiscoveryClientOptionalArgs;
 /**
  * @author Daniel Lavoie
  */
-public class RestTemplateDiscoveryClientOptionalArgs
-		extends AbstractDiscoveryClientOptionalArgs<Void> {
+public class RestTemplateDiscoveryClientOptionalArgs extends AbstractDiscoveryClientOptionalArgs<Void> {
 
+	protected final EurekaClientHttpRequestFactorySupplier eurekaClientHttpRequestFactorySupplier;
+
+	public RestTemplateDiscoveryClientOptionalArgs(
+			EurekaClientHttpRequestFactorySupplier eurekaClientHttpRequestFactorySupplier) {
+		this.eurekaClientHttpRequestFactorySupplier = eurekaClientHttpRequestFactorySupplier;
+		setTransportClientFactories(new RestTemplateTransportClientFactories(this));
+	}
+
+	/**
+	 * @deprecated - use
+	 * {@link RestTemplateDiscoveryClientOptionalArgs#RestTemplateDiscoveryClientOptionalArgs(EurekaClientHttpRequestFactorySupplier)}
+	 */
+	@Deprecated
 	public RestTemplateDiscoveryClientOptionalArgs() {
-		setTransportClientFactories(new RestTemplateTransportClientFactories());
+		this(new DefaultEurekaClientHttpRequestFactorySupplier());
 	}
 
 }

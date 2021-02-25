@@ -5,16 +5,16 @@
 	<parent>
 		<artifactId>spring-cloud-dependencies-parent</artifactId>
 		<groupId>org.springframework.cloud</groupId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.0.2-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
 	<artifactId>spring-cloud-netflix-dependencies</artifactId>
-	<version>3.0.0-SNAPSHOT</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>spring-cloud-netflix-dependencies</name>
 	<description>Spring Cloud Netflix Dependencies</description>
 	<properties>
-		<eureka.version>1.9.25</eureka.version>
+		<eureka.version>1.10.11</eureka.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

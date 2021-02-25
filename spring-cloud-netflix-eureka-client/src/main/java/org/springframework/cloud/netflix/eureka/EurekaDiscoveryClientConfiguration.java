@@ -51,27 +51,14 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBlockingDiscoveryEnabled
 public class EurekaDiscoveryClientConfiguration {
 
-	/**
-	 * Deprecated in favor of auto configuration order.
-	 * @return Marker bean
-	 * @deprecated in favor of auto configuration order.
-	 */
-	@Deprecated
-	@Bean
-	public Marker eurekaDiscoverClientMarker() {
-		return new Marker();
-	}
-
 	@Bean
 	@ConditionalOnMissingBean
-	public EurekaDiscoveryClient discoveryClient(EurekaClient client,
-			EurekaClientConfig clientConfig) {
+	public EurekaDiscoveryClient discoveryClient(EurekaClient client, EurekaClientConfig clientConfig) {
 		return new EurekaDiscoveryClient(client, clientConfig);
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "eureka.client.healthcheck.enabled",
-			matchIfMissing = false)
+	@ConditionalOnProperty(value = "eureka.client.healthcheck.enabled", matchIfMissing = false)
 	protected static class EurekaHealthCheckHandlerConfiguration {
 
 		@Autowired(required = false)
@@ -82,16 +69,6 @@ public class EurekaDiscoveryClientConfiguration {
 		public EurekaHealthCheckHandler eurekaHealthCheckHandler() {
 			return new EurekaHealthCheckHandler(this.statusAggregator);
 		}
-
-	}
-
-	/**
-	 * Deprecated in favor of auto configuration order.
-	 *
-	 * @deprecated in favor of auto configuration order.
-	 */
-	@Deprecated
-	class Marker {
 
 	}
 

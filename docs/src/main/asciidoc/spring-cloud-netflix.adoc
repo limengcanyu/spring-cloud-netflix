@@ -85,7 +85,29 @@ To disable the Eureka Discovery Client, you can set `eureka.client.enabled` to `
 HTTP basic authentication is automatically added to your eureka client if one of the `eureka.client.serviceUrl.defaultZone` URLs has credentials embedded in it (curl style, as follows: `https://user:password@localhost:8761/eureka`).
 For more complex needs, you can create a `@Bean` of type `DiscoveryClientOptionalArgs` and inject `ClientFilter` instances into it, all of which is applied to the calls from the client to the server.
 
+When Eureka server requires client side certificate for authentication, the client side certificate and trust store can be configured via properties, as shown in following example:
+
+.application.yml
+[source,yaml]
+----
+eureka:
+  client:
+    tls:
+      enabled: true
+      key-store: <path-of-key-store>
+      key-store-type: PKCS12
+      key-store-password: <key-store-password>
+      key-password: <key-password>
+      trust-store: <path-of-trust-store>
+      trust-store-type: PKCS12
+      trust-store-password: <trust-store-password>
+----
+
+The `eureka.client.tls.enabled` needs to be true to enable Eureka client side TLS. When `eureka.client.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `eureka.client.tls.key-store-type` and `eureka.client.tls.trust-store-type` is PKCS12. When password properties are omitted, empty password is assumed.
+
 NOTE: Because of a limitation in Eureka, it is not possible to support per-server basic auth credentials, so only the first set that are found is used.
+
+If you want to customize the RestTemplate used by the Eureka HTTP Client you may want to create a bean of `EurekaClientHttpRequestFactorySupplier` and provide your own logic for generating a `ClientHttpRequestFactory` instance.
 
 === Status Page and Health Indicator
 
@@ -107,7 +129,7 @@ that management context path.  This requirement was removed beginning in Edgware
 
 === Registering a Secure Application
 
-If your app wants to be contacted over HTTPS, you can set two flags in the `EurekaInstanceConfig`:
+If your app wants to be contacted over HTTPS, you can set two flags in the `EurekaInstanceConfigBean`:
 
 * `eureka.instance.[nonSecurePortEnabled]=[false]`
 * `eureka.instance.[securePortEnabled]=[true]`
@@ -194,10 +216,10 @@ If the application is planned to be deployed to an AWS cloud, the Eureka instanc
 @Bean
 @Profile("!default")
 public EurekaInstanceConfigBean eurekaInstanceConfig(InetUtils inetUtils) {
-  EurekaInstanceConfigBean b = new EurekaInstanceConfigBean(inetUtils);
+  EurekaInstanceConfigBean bean = new EurekaInstanceConfigBean(inetUtils);
   AmazonInfo info = AmazonInfo.Builder.newBuilder().autoBuild("eureka");
-  b.setDataCenterInfo(info);
-  return b;
+  bean.setDataCenterInfo(info);
+  return bean;
 }
 ----
 
@@ -246,29 +268,22 @@ It is initialized in a `SmartLifecycle` (with `phase=0`), so the earliest you ca
 
 ==== EurekaClient without Jersey
 
-By default, EurekaClient uses Jersey for HTTP communication.
-If you wish to avoid dependencies from Jersey, you can exclude it from your dependencies.
-Spring Cloud auto-configures a transport client based on Spring `RestTemplate`.
-The following example shows Jersey being excluded:
+By default, EurekaClient uses Spring's `RestTemplate` for HTTP communication.
+If you wish to use Jersey instead, you need to add the Jersey dependencies to your classpath.
+The following example shows the dependencies you need to add:
 
 ----
 <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-    <exclusions>
-        <exclusion>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-apache-client4</artifactId>
-        </exclusion>
-    </exclusions>
+    <groupId>com.sun.jersey</groupId>
+    <artifactId>jersey-client</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.sun.jersey</groupId>
+    <artifactId>jersey-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.sun.jersey.contribs</groupId>
+    <artifactId>jersey-apache-client4</artifactId>
 </dependency>
 ----
 

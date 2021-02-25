@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.netflix.appinfo.EurekaInstanceConfig;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.EurekaClientConfig;
@@ -48,13 +47,7 @@ public class EurekaDiscoveryClient implements DiscoveryClient {
 
 	private final EurekaClientConfig clientConfig;
 
-	@Deprecated
-	public EurekaDiscoveryClient(EurekaInstanceConfig config, EurekaClient eurekaClient) {
-		this(eurekaClient, eurekaClient.getEurekaClientConfig());
-	}
-
-	public EurekaDiscoveryClient(EurekaClient eurekaClient,
-			EurekaClientConfig clientConfig) {
+	public EurekaDiscoveryClient(EurekaClient eurekaClient, EurekaClientConfig clientConfig) {
 		this.clientConfig = clientConfig;
 		this.eurekaClient = eurekaClient;
 	}
@@ -66,8 +59,7 @@ public class EurekaDiscoveryClient implements DiscoveryClient {
 
 	@Override
 	public List<ServiceInstance> getInstances(String serviceId) {
-		List<InstanceInfo> infos = this.eurekaClient.getInstancesByVipAddress(serviceId,
-				false);
+		List<InstanceInfo> infos = this.eurekaClient.getInstancesByVipAddress(serviceId, false);
 		List<ServiceInstance> instances = new ArrayList<>();
 		for (InstanceInfo info : infos) {
 			instances.add(new EurekaServiceInstance(info));
@@ -95,8 +87,7 @@ public class EurekaDiscoveryClient implements DiscoveryClient {
 
 	@Override
 	public int getOrder() {
-		return clientConfig instanceof Ordered ? ((Ordered) clientConfig).getOrder()
-				: DiscoveryClient.DEFAULT_ORDER;
+		return clientConfig instanceof Ordered ? ((Ordered) clientConfig).getOrder() : DiscoveryClient.DEFAULT_ORDER;
 	}
 
 }

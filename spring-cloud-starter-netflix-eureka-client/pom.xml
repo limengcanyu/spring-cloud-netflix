@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-netflix</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.0.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 	<name>Spring Cloud Starter Netflix Eureka Client</name>
@@ -62,10 +62,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
 		</dependency>
 	</dependencies>
 </project>
